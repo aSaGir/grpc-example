@@ -1,0 +1,84 @@
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.2'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.8'
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.1.3.RELEASE'
+    id "com.google.protobuf" version "0.8.8"
+    id "com.google.osdetector" version "1.6.2"
+    id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.grpc.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.grpc:grpc-protobuf:1.8.0'
+    implementation 'io.grpc:grpc-stub:1.8.0'
+    implementation 'io.grpc:grpc-netty:1.8.0'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    compile 'io.github.lognet:grpc-spring-boot-starter:3.1.0'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok:1.16.16'
+    annotationProcessor 'org.projectlombok:lombok:1.16.16'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+ext {
+    generatedPath = "$projectDir/src/generated"
+}
+
+clean.doFirst {
+    delete generatedPath
+}
+
+sourceSets {
+    main.java.srcDirs "${generatedPath}/main/java"
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.4.0'
+    }
+    plugins {
+        grpc {
+            // This version number must be aligned with artifact versions in dependencies section
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.7.0'
+        }
+    }
+    generatedFilesBaseDir = generatedPath
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {
+                // To generate deprecated interfaces and static bindService method,
+                // turn the enable_deprecated option to true below:
+                option 'enable_deprecated=false'
+                outputSubDir = 'java'
+            }
+        }
+    }
+}
